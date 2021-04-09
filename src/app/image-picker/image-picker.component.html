@@ -18,9 +18,9 @@
             </div>
             
             <div fxLayout="column" fxLayoutAlign="start center" class="select-image">
-                <input type="file" id="fileInput"
-                    hidden  #fileInput 
-                    multiple (change)="onFileChange()">
+                <input type="file" hidden  #fileInput 
+                    [multiple]="allowMultiple" [accept]="allowedFileTypes"
+                    (change)="onFileChange()">
 
                 <div fxLayout="column" fxLayoutAlign="start center" (click)="onUploadFile()" class="uploader-icon">
                     <mat-icon>cloud_upload</mat-icon>

@@ -12,6 +12,7 @@ export class ImagePickerComponent implements OnInit
 	
 	type: 'image' | 'file';
 	allowMultiple: boolean;
+	allowedFileTypes: string[];
 	files: File[];
 
 	constructor() 
@@ -19,10 +20,16 @@ export class ImagePickerComponent implements OnInit
 		this.type = 'image';
 		this.files = [];
 		this.allowMultiple = true;
+		this.allowedFileTypes = ['images/*'];
 	}
 
   	ngOnInit(): void 
 	{
+		if (this.allowedFileTypes.length > 0 || this.allowedFileTypes[0] !== 'images/*') {
+			const allowedFiles = [];
+			for (let type of this.allowedFileTypes) allowedFiles.push('.' + type);
+			this.allowedFileTypes = allowedFiles;
+		}
   	}
 
 	onBrowseExistingFiles(): void
@@ -38,8 +45,6 @@ export class ImagePickerComponent implements OnInit
 	onFileChange(): void
 	{
 		const files = this.fileInput.nativeElement.files;
-		console.log('Files', files);
-
 		if (files) {
 			for (let i=0; i<files.length; i++) {
 				this.files.push(files.item(i));

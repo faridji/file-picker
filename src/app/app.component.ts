@@ -23,5 +23,7 @@ export class AppComponent
 		});
 
 		dialog.componentInstance.type = 'image';
+		dialog.componentInstance.allowMultiple = false;
+		dialog.componentInstance.allowedFileTypes = ['png', 'jpg', 'jpeg'];
 	}
 }
