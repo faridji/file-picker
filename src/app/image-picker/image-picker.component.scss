@@ -1,0 +1,31 @@
+::ng-deep .chi-image-picker .mat-dialog-container {
+    padding: 0 !important;
+}
+
+.container {
+    height: 100%;
+
+    .chi-image-picker-header {
+        background: #62646a; 
+        border-radius: 4px;
+        color: #fff;
+    }
+
+    .image-content {
+        height: calc(100% - 40px);
+
+        .no-image {
+            width: 100px;
+        }
+        
+        .file-name {
+            font-weight: 600;
+        }
+
+        .select-image {
+            .uploader-icon {
+                cursor: pointer;
+            }
+        }
+    }
+}

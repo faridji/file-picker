@@ -1,0 +1,34 @@
+<div class="container" fxLayout="column">
+    <div fxLayoutAlign="space-between center" class="chi-image-picker-header">
+        <h2 style="margin: 0;">{{title}}</h2>
+
+        <div class="primary" style="border-radius: 4px;">
+            <button mat-icon-button matDialogClose tabindex="-1">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+    </div>
+
+    <div class="image-content">
+        <div fxLayout="row wrap" fxLayoutGap="10px">
+            <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="2px" 
+                *ngFor="let file of files;">
+                <img src="/assets/no-image.svg" class="no-image">
+                <div class="file-name">{{file.name}}</div>
+            </div>
+            
+            <div fxLayout="column" fxLayoutAlign="start center" class="select-image">
+                <input type="file" id="fileInput"
+                    hidden  #fileInput 
+                    multiple (change)="onFileChange()">
+
+                <div fxLayout="column" fxLayoutAlign="start center" (click)="onUploadFile()" class="uploader-icon">
+                    <mat-icon>cloud_upload</mat-icon>
+                    <div>upload</div>
+                </div>
+
+                <button mat-stroked-button (click)="onBrowseExistingFiles()">Browse Existing Files</button>
+            </div>
+        </div>
+    </div>
+</div>
