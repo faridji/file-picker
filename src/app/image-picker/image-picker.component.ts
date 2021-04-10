@@ -1,4 +1,7 @@
+import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FileUploadService } from './file-upload.service';
+import { FileProgress } from './models';
 
 
 @Component({
@@ -13,14 +16,17 @@ export class ImagePickerComponent implements OnInit
 	type: 'image' | 'file';
 	allowMultiple: boolean;
 	allowedFileTypes: string[];
-	files: File[];
+	files: FileProgress[];
+	message: string;
 
-	constructor() 
+	constructor(private fileUploadService: FileUploadService) 
 	{
 		this.type = 'image';
 		this.files = [];
 		this.allowMultiple = true;
 		this.allowedFileTypes = ['images/*'];
+		this.files = [];
+		this.message = null;
 	}
 
   	ngOnInit(): void 
@@ -47,11 +53,36 @@ export class ImagePickerComponent implements OnInit
 		const files = this.fileInput.nativeElement.files;
 		if (files) {
 			for (let i=0; i<files.length; i++) {
-				this.files.push(files.item(i));
+				this.upload(i, files.item(i));
 			}
 		}
+	}
+
+	upload(idx: number, file: File): void
+	{
+		this.files[idx] = {progress: 0, fileName: file.name, url: '/assets/images/no-image.svg'};
 		
-		console.log('All Files =', this.files);
+		this.fileUploadService.upload(file).subscribe(
+			(event: HttpEvent<any>) => {
+				if (event.type === HttpEventType.UploadProgress) {
+					this.files[idx].progress = Math.round(100 * event.loaded / event.total);
+					console.log('Progress =', this.files[idx]);
+				}
+				else if (event instanceof HttpResponse) {
+					this.files[idx].url = event.body.data['file_url'];
+				}
+			},
+			err => {
+				this.files[idx].progress = 0;
+				this.message = `Could't upload file ${file.name}`;
+			}
+		);
+	}
+
+	onRemoveFile(file: FileProgress): void
+	{
+		const idx = this.files.indexOf(file);
+		this.files.splice(idx, 1);
 	}
 
 	get title(): string

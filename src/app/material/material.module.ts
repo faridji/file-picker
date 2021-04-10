@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 
 import { FlexLayoutModule } from '@angular/flex-layout';
 
@@ -11,6 +12,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatButtonModule,
 	  MatDialogModule,
     MatIconModule,
+    MatProgressBarModule,
 
     FlexLayoutModule
   ],
@@ -18,6 +20,7 @@ import { FlexLayoutModule } from '@angular/flex-layout';
     MatButtonModule,
 	  MatDialogModule,
     MatIconModule,
+    MatProgressBarModule,
 
     FlexLayoutModule
   ]

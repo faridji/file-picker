@@ -13,12 +13,26 @@
         <div fxLayout="row wrap" fxLayoutGap="10px">
             <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="2px" 
                 *ngFor="let file of files;">
-                <img src="/assets/no-image.svg" class="no-image">
-                <div class="file-name">{{file.name}}</div>
+
+                <button mat-icon-button class="btn-close" (click)="onRemoveFile(file)">
+                    <mat-icon>close</mat-icon>
+                </button>
+
+                <div fxLayout="column" class="browse-files">
+                    <div style="position: relative;">
+                        <img [src]="file.url" class="image">
+                        <mat-progress-bar *ngIf="file.progress > 0 && file.progress < 100"
+                            class="progress-bar"
+                            mode="determinate" 
+                            [value]="file.progress">
+                        </mat-progress-bar>
+                    </div>
+                    <div class="file-name">{{file.fileName}}</div>
+                </div>
             </div>
             
             <div fxLayout="column" fxLayoutAlign="start center" class="select-image">
-                <input type="file" hidden  #fileInput 
+                <input type="file" hidden #fileInput 
                     [multiple]="allowMultiple" [accept]="allowedFileTypes"
                     (change)="onFileChange()">
 
