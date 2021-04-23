@@ -48,7 +48,7 @@
                 <div fxLayout="column" fxLayoutAlign="center center" class="select-image" *ngIf="allowMultiple || (!allowMultiple && files.length === 0)">
                     <input type="file" hidden #fileInput 
                         [multiple]="allowMultiple" 
-                        [accept]="allowedFileTypes"
+                        [accept]="allowedFileTypes.length > 0 ? allowedFileTypes : 'images/*'"
                         (change)="onFileChange()">
     
                     <div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start center">

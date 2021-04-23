@@ -33,7 +33,7 @@ export class ImagePickerComponent implements OnInit
 	{
 		this.type = 'image';
 		this.files = [];
-		this.allowedFileTypes = ['images/*'];
+		this.allowedFileTypes = [];
 		this.files = [];
 		this.currentUploadRequest = new Subscription();
 		this.selected = new EventEmitter();
@@ -48,7 +48,7 @@ export class ImagePickerComponent implements OnInit
 
   	ngOnInit(): void 
 	{
-		if (this.allowedFileTypes.length > 0 || this.allowedFileTypes[0] !== 'images/*') {
+		if (this.allowedFileTypes.length > 0) {
 			const allowedFiles = [];
 			for (let type of this.allowedFileTypes) allowedFiles.push('.' + type);
 			this.allowedFileTypes = allowedFiles;
@@ -113,7 +113,10 @@ export class ImagePickerComponent implements OnInit
 
 	private isValidFileType(file: File): boolean
 	{
-    	return (new RegExp('(' + this.allowedFileTypes.join('|').replace(/\./g, '\\.') + ')$')).test(file.name.toLowerCase());
+		if (this.allowedFileTypes.length > 0)
+    		return (new RegExp('(' + this.allowedFileTypes.join('|').replace(/\./g, '\\.') + ')$')).test(file.name.toLowerCase());
+		
+		return true;
 	}
 
 	private checkImageDimensions(file: File, f: CustomFile): void

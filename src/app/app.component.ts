@@ -25,6 +25,7 @@ export class AppComponent
 		dialog.componentInstance.inDialog = true;
 		dialog.componentInstance.type = 'image';
 		dialog.componentInstance.allowMultiple = false;
-		dialog.componentInstance.allowedFileTypes = ['png', 'jpg', 'jpeg'];
+		dialog.componentInstance.maxFileSize = 2;
+		dialog.componentInstance.allowedFileTypes = ['jpg', 'jpeg'];
 	}
 }
