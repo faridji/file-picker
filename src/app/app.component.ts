@@ -22,6 +22,7 @@ export class AppComponent
 			panelClass: 'chi-image-picker'
 		});
 
+		dialog.componentInstance.inDialog = true;
 		dialog.componentInstance.type = 'image';
 		dialog.componentInstance.allowMultiple = false;
 		dialog.componentInstance.allowedFileTypes = ['png', 'jpg', 'jpeg'];

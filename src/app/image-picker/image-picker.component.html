@@ -1,48 +1,78 @@
 <div class="container" fxLayout="column">
-    <div fxLayoutAlign="space-between center" class="chi-image-picker-header">
+    <div fxLayoutAlign="space-between center" class="pl-8 chi-image-picker-header" *ngIf="inDialog">
         <h2 style="margin: 0;">{{title}}</h2>
 
         <div class="primary" style="border-radius: 4px;">
-            <button mat-icon-button matDialogClose tabindex="-1">
+            <button mat-icon-button tabindex="-1" matDialogClose>
                 <mat-icon>close</mat-icon>
             </button>
         </div>
     </div>
 
-    <div class="image-content">
-        <div fxLayout="row wrap" fxLayoutGap="10px">
-            <div fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="2px" 
-                *ngFor="let file of files;">
-
-                <button mat-icon-button class="btn-close" (click)="onRemoveFile(file)">
-                    <mat-icon>close</mat-icon>
-                </button>
-
-                <div fxLayout="column" class="browse-files">
-                    <div style="position: relative;">
-                        <img [src]="file.url" class="image">
-                        <mat-progress-bar *ngIf="file.progress > 0 && file.progress < 100"
-                            class="progress-bar"
-                            mode="determinate" 
-                            [value]="file.progress">
-                        </mat-progress-bar>
+    <div class="image-content" fxLayout="column">
+        <div [class.images]="inDialog">
+            <div fxLayout="row wrap" fxLayoutGap="10px" fxLayoutAlign="start center">
+                <div class="uploaded-image" fxLayout="column" fxLayoutAlign="start center" fxLayoutGap="2px"
+                    (mouseleave)="onImageAreaLeave(file)" 
+                    (mouseenter)="onImageAreaEnter(file)" 
+                    *ngFor="let file of files;">
+    
+                    <div fxLayout="column" class="browse-files" fxLayoutAlign="start center">
+                        <div class="btn-close" *ngIf="showRemoveBtn && hoveredFile && file.file_name == hoveredFile.file_name">
+                            <mat-icon color="primary" (click)="onRemoveFile(file)">close</mat-icon>
+                        </div>
+    
+                        <img [src]="file.file_url" class="image">
+                        
+                        <div class="progress-bar" *ngIf="file.progress_value > 0 && file.progress_value < 100">
+                            <span class="upload" [style.width.px]="file.progress_value"></span>
+                        </div>
+    
+                        <div *ngIf="showDetails && hoveredFile && file.file_name == hoveredFile.file_name"
+                            class="details" fxLayout="column"
+                             fxLayoutAlign="start center" fxLayoutGap="10px">
+                            <span class="size">
+                                <span class="value">{{file.file_size}}</span>
+                            </span>
+                            <span class="file-name">
+                                {{file.file_name}}
+                            </span>
+                        </div>
+    
+                        <div *ngIf="file.error_message" class="error-message">
+                            {{file.error_message}}
+                        </div>
                     </div>
-                    <div class="file-name">{{file.fileName}}</div>
+                </div>
+                           
+                <div fxLayout="column" fxLayoutAlign="center center" class="select-image" *ngIf="allowMultiple || (!allowMultiple && files.length === 0)">
+                    <input type="file" hidden #fileInput 
+                        [multiple]="allowMultiple" 
+                        [accept]="allowedFileTypes"
+                        (change)="onFileChange()">
+    
+                    <div fxLayout="column" fxLayoutGap="10px" fxLayoutAlign="start center">
+                        <div fxLayout="column" fxLayoutAlign="start center" 
+                            (click)="onUploadFile()" class="uploader-icon">
+                            <mat-icon>cloud_upload</mat-icon>
+                            <div>Upload New</div>
+                        </div>
+        
+                        <div style="color: gray;">or</div>
+    
+                        <button *ngIf="showUploadedFiles" mat-stroked-button class="stroke-button" (click)="onBrowseExistingFiles()">
+                            Browse Existing
+                        </button>
+                    </div>
                 </div>
             </div>
-            
-            <div fxLayout="column" fxLayoutAlign="start center" class="select-image">
-                <input type="file" hidden #fileInput 
-                    [multiple]="allowMultiple" [accept]="allowedFileTypes"
-                    (change)="onFileChange()">
-
-                <div fxLayout="column" fxLayoutAlign="start center" (click)="onUploadFile()" class="uploader-icon">
-                    <mat-icon>cloud_upload</mat-icon>
-                    <div>upload</div>
-                </div>
-
-                <button mat-stroked-button (click)="onBrowseExistingFiles()">Browse Existing Files</button>
-            </div>
+        </div>
+    
+        <div *ngIf="inDialog" fxLayoutAlign="end" class="actions">
+            <button mat-raised-button color="primary" style="margin-top: 5px;"
+                (click)="onSave()" 
+                [disabled]="disableSaveBtn">Save
+            </button>
         </div>
     </div>
 </div>

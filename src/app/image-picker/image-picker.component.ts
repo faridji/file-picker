@@ -1,7 +1,8 @@
 import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Subscription } from 'rxjs/internal/Subscription';
 import { FileUploadService } from './file-upload.service';
-import { FileProgress } from './models';
+import { CustomFile, FileDimensions } from './models';
 
 
 @Component({
@@ -11,22 +12,38 @@ import { FileProgress } from './models';
 })
 export class ImagePickerComponent implements OnInit 
 {
+	@Input() type: 'image' | 'file';
+	@Input() allowMultiple: boolean;
+	@Input() allowedFileTypes: string[];
+	@Input() maxFileSize: number; 		// Size in MBs
+	@Input() dimension: FileDimensions;
+	@Input() files: CustomFile[];
+	@Input() showUploadedFiles: boolean;
+
 	@ViewChild('fileInput') fileInput: ElementRef<HTMLInputElement>;
-	
-	type: 'image' | 'file';
-	allowMultiple: boolean;
-	allowedFileTypes: string[];
-	files: FileProgress[];
-	message: string;
+	@Output() selected: EventEmitter<CustomFile>;
+
+	inDialog: boolean;
+	private currentUploadRequest: Subscription;
+	showRemoveBtn: boolean;
+	showDetails: boolean;
+	hoveredFile: CustomFile;
 
 	constructor(private fileUploadService: FileUploadService) 
 	{
 		this.type = 'image';
 		this.files = [];
-		this.allowMultiple = true;
 		this.allowedFileTypes = ['images/*'];
 		this.files = [];
-		this.message = null;
+		this.currentUploadRequest = new Subscription();
+		this.selected = new EventEmitter();
+
+		this.inDialog = false;
+		this.allowMultiple = true;
+		this.showUploadedFiles = true;
+		this.showRemoveBtn = false;
+		this.showDetails = false;
+		this.hoveredFile = null;
 	}
 
   	ngOnInit(): void 
@@ -37,6 +54,19 @@ export class ImagePickerComponent implements OnInit
 			this.allowedFileTypes = allowedFiles;
 		}
   	}
+
+	ngOnDestroy(): void
+	{
+		this.clearSubscription();	
+	}
+
+	clearSubscription(): void
+	{
+		if (this.currentUploadRequest) {
+			this.currentUploadRequest.unsubscribe();
+			this.currentUploadRequest = null;
+		}
+	}
 
 	onBrowseExistingFiles(): void
 	{
@@ -52,37 +82,145 @@ export class ImagePickerComponent implements OnInit
 	{
 		const files = this.fileInput.nativeElement.files;
 		if (files) {
-			for (let i=0; i<files.length; i++) {
-				this.upload(i, files.item(i));
+			for (let i=0; i<files.length; i++) 
+			{
+				const file = files.item(i);
+				const f = {
+					file_name: file.name, 
+					file_url: '/assets/no-image.svg', 
+					progress_value: 0, 
+					file_size: null,
+					error_message: null
+				};
+				
+				// remove file that has error if exists;
+				const fileWithError = this.files.find(file => file.error_message != null);
+				if (fileWithError) this.files.pop();
+			
+				this.files.push(f);
+
+				// Check if current uploaded file has extension that is available in allowed file types;
+				if (!this.isValidFileType(file)) 
+				{
+					f.error_message = `Invalid File Type. Allowed types are ${this.allowedFileTypes}`;
+					return;
+				}
+
+				this.checkImageDimensions(file, f);
 			}
 		}
 	}
 
-	upload(idx: number, file: File): void
+	private isValidFileType(file: File): boolean
 	{
-		this.files[idx] = {progress: 0, fileName: file.name, url: '/assets/images/no-image.svg'};
-		
-		this.fileUploadService.upload(file).subscribe(
+    	return (new RegExp('(' + this.allowedFileTypes.join('|').replace(/\./g, '\\.') + ')$')).test(file.name.toLowerCase());
+	}
+
+	private checkImageDimensions(file: File, f: CustomFile): void
+	{
+		let _URL = window.URL || window.webkitURL;
+		const img = new Image();
+		img.src = _URL.createObjectURL(file);
+
+		if (this.dimension)
+		{
+			img.onload = () => {
+				if (img.width > this.dimension.width || img.height > this.dimension.height) 
+				{
+					console.error('Invalid File Dimensions.');
+					f.error_message = "Invalid dimensions!";
+					return;
+				}
+				else 
+				{
+					this.checkImageSize(file, f);
+				}
+			}
+		}
+		else {
+			this.checkImageSize(file, f);
+		}
+	}
+
+	private checkImageSize(file: File, f: CustomFile): void
+	{
+		const sizeInMbs = Math.round(file.size/1024/1024);
+		if (sizeInMbs > this.maxFileSize) {
+			f.error_message = `File is too big (${sizeInMbs} MB). Max file size: ${this.maxFileSize}MB`;
+			return;
+		};
+
+		this.upload(file, f);
+	}
+
+	private upload(file: File, f: CustomFile): void
+	{
+		this.currentUploadRequest = this.fileUploadService.upload(file).subscribe(
 			(event: HttpEvent<any>) => {
 				if (event.type === HttpEventType.UploadProgress) {
-					this.files[idx].progress = Math.round(100 * event.loaded / event.total);
-					console.log('Progress =', this.files[idx]);
+					f.progress_value = Math.round(100 * event.loaded / event.total);
 				}
 				else if (event instanceof HttpResponse) {
-					this.files[idx].url = event.body.data['file_url'];
+					f.file_url = event.body.data['file_url'];
+					f.file_size = this.getImageSize(event.body.data)
+					this.selected.emit(f);
+					f.progress_value = 0;
 				}
 			},
 			err => {
-				this.files[idx].progress = 0;
-				this.message = `Could't upload file ${file.name}`;
+				f.progress_value = 0;
+				f.error_message = `Could't upload file ${file.name}`;
 			}
 		);
 	}
 
-	onRemoveFile(file: FileProgress): void
+	private getImageSize(file: any): string
 	{
+		if (file['file_size'] < 10000) {
+			return (file['file_size'] / 1024).toFixed(1) + ' KB';
+		}
+		else
+		{
+			return (file['file_size'] / (1024 * 1024)).toFixed(1) + ' MB';
+		}
+	}
+
+	onRemoveFile(file: CustomFile): void
+	{
+		if (this.fileUploadService) this.clearSubscription();
+
 		const idx = this.files.indexOf(file);
 		this.files.splice(idx, 1);
+	}
+
+	onImageAreaLeave(file: CustomFile): void
+	{
+		this.showRemoveBtn = false; 
+		this.showDetails = false;
+		this.hoveredFile = null;
+	}
+
+	onImageAreaEnter(file: any): void
+	{
+		this.showRemoveBtn = true; 
+		this.showDetails = true;
+		this.hoveredFile = file;
+	}
+
+	onSave(): void
+	{
+
+	}
+
+	fileHasError(): boolean
+	{
+		let hasError = false;
+		for (let file of this.files)
+		{
+			if (file.error_message) hasError = true;
+		}
+
+		return hasError;
 	}
 
 	get title(): string
@@ -93,5 +231,15 @@ export class ImagePickerComponent implements OnInit
 			case 'file':
 				return 'File Picker';
 		}
+	}
+
+	get disableSaveBtn(): boolean
+	{
+		if (this.files.length === 0 || this.fileHasError()) 
+		{
+			return true;
+		}
+
+		return false;
 	}
 }
